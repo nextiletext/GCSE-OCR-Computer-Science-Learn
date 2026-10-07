@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OCR GCSE Computer Science (J277) Revision Hub</title>
+  <style>
+    :root {
+      --primary: #1d4ed8;
+      --primary-hover: #1e40af;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --success: #16a34a;
+      --danger: #dc2626;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 20px; max-width: 1000px; margin: 0 auto; }
+    
+    header { text-align: center; margin-bottom: 24px; }
+    header h1 { font-size: 1.8rem; margin-bottom: 6px; color: var(--primary); }
+    header p { color: var(--text-muted); font-size: 0.95rem; }
+
+    nav { display: flex; gap: 10px; justify-content: center; margin-bottom: 24px; flex-wrap: wrap; }
+    nav button {
+      padding: 10px 18px; border: 1px solid var(--border); background: var(--card-bg);
+      border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--text);
+      transition: all 0.2s;
+    }
+    nav button.active, nav button:hover { background: var(--primary); color: white; border-color: var(--primary); }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .controls { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    select { padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: white; font-size: 0.95rem; flex: 1; min-width: 200px; }
+
+    /* Flashcard Styles */
+    .flashcard-container { perspective: 1000px; height: 260px; margin-bottom: 20px; cursor: pointer; }
+    .flashcard {
+      width: 100%; height: 100%; position: relative; transform-style: preserve-3d;
+      transition: transform 0.6s; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    .flashcard.flipped { transform: rotateY(180deg); }
+    .card-front, .card-back {
+      position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      padding: 24px; text-align: center; border-radius: 12px; background: var(--card-bg);
+      border: 1px solid var(--border);
+    }
+    .card-back { transform: rotateY(180deg); background: #eff6ff; }
+    .card-tag { position: absolute; top: 12px; left: 12px; font-size: 0.75rem; font-weight: 700; color: var(--primary); text-transform: uppercase; background: #dbeafe; padding: 4px 8px; border-radius: 4px; }
+    
+    .card-nav { display: flex; justify-content: space-between; align-items: center; }
+    .btn { padding: 8px 16px; border-radius: 6px; border: none; background: var(--primary); color: white; cursor: pointer; font-weight: 600; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Quiz Styles */
+    .quiz-card { background: var(--card-bg); padding: 24px; border-radius: 12px; border: 1px solid var(--border); }
+    .options-grid { display: flex; flex-direction: column; gap: 10px; margin: 20px 0; }
+    .option-btn {
+      padding: 12px 16px; border: 1px solid var(--border); background: var(--card-bg);
+      border-radius: 6px; text-align: left; cursor: pointer; font-size: 0.95rem; transition: background 0.2s;
+    }
+    .option-btn:hover { background: #f1f5f9; }
+    .option-btn.correct { background: #dcfce7; border-color: var(--success); color: #14532d; }
+    .option-btn.wrong { background: #fee2e2; border-color: var(--danger); color: #7f1d1d; }
+
+    /* Notes Styles */
+    .notes-list { display: flex; flex-direction: column; gap: 16px; }
+    .note-item { background: var(--card-bg); padding: 18px; border-radius: 8px; border: 1px solid var(--border); }
+    .note-item h3 { color: var(--primary); margin-bottom: 8px; font-size: 1.1rem; }
+    .note-item p { font-size: 0.95rem; line-height: 1.5; color: #334155; }
+
+    .score-box { text-align: center; font-size: 1.2rem; font-weight: 700; margin-top: 15px; color: var(--primary); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>OCR GCSE Computer Science (J277)</h1>
+    <p>Complete Revision Hub • Component 1 & Component 2</p>
+  </header>
+
+  <nav>
+    <button class="active" onclick="switchTab('flashcards')">🎴 Flashcards</button>
+    <button onclick="switchTab('quiz')">✍️ Practice Quiz</button>
+    <button onclick="switchTab('notes')">📖 Topic Notes</button>
+  </nav>
+
+  <!-- FLASHCARDS VIEW -->
+  <div id="flashcards" class="view active">
+    <div class="controls">
+      <select id="flashcard-filter" onchange="loadFlashcards()">
+        <option value="all">All Components</option>
+        <option value="c1">Component 1: Computer Systems</option>
+        <option value="c2">Component 2: Computational Thinking & Algorithms</option>
+      </select>
+    </div>
+    
+    <div class="flashcard-container" onclick="flipCard()">
+      <div class="flashcard" id="card">
+        <div class="card-front">
+          <span class="card-tag" id="card-tag">Tag</span>
+          <h2 id="card-question">Loading question...</h2>
+          <p style="margin-top:15px; font-size:0.8rem; color:var(--text-muted);">(Click to flip)</p>
+        </div>
+        <div class="card-back">
+          <h3 id="card-answer">Loading answer...</h3>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-nav">
+      <button class="btn" onclick="prevCard()" id="prev-btn">Previous</button>
+      <span id="card-counter">1 / 10</span>
+      <button class="btn" onclick="nextCard()" id="next-btn">Next</button>
+    </div>
+  </div>
+
+  <!-- QUIZ VIEW -->
+  <div id="quiz" class="view">
+    <div class="controls">
+      <select id="quiz-filter" onchange="resetQuiz()">
+        <option value="all">All Topics</option>
+        <option value="c1">Component 1 Topics</option>
+        <option value="c2">Component 2 Topics</option>
+      </select>
+    </div>
+
+    <div class="quiz-card">
+      <span class="card-tag" id="quiz-tag">Quiz</span>
+      <h2 id="quiz-question" style="margin-top:15px;">Question text will go here?</h2>
+      <div class="options-grid" id="quiz-options"></div>
+      <div class="card-nav">
+        <button class="btn" onclick="nextQuizQuestion()" id="quiz-next-btn" style="display:none;">Next Question</button>
+      </div>
+      <div class="score-box" id="quiz-score">Score: 0</div>
+    </div>
+  </div>
+
+  <!-- NOTES VIEW -->
+  <div id="notes" class="view">
+    <div class="controls">
+      <select id="notes-filter" onchange="loadNotes()">
+        <option value="all">All Topics</option>
+        <option value="c1">Component 1: Computer Systems</option>
+        <option value="c2">Component 2: Algorithms & Programming</option>
+      </select>
+    </div>
+    <div class="notes-list" id="notes-container"></div>
+  </div>
+
+  <script>
+    // Complete OCR J277 Syllabus Content Database
+    const contentData = [
+      // Component 1[cite: 7]
+      { comp: "c1", topic: "1.1 Systems Architecture", q: "What is the primary function of the CPU?", a: "To fetch, decode, and execute instructions.", note: "The CPU performs the Fetch-Decode-Execute cycle[cite: 8]. Key components include the ALU (arithmetic/logic)[cite: 8], Control Unit (directs operations)[cite: 8], Cache (fast memory)[cite: 8], and Registers (MAR, MDR, PC, ACC)[cite: 8]." },
+      { comp: "c1", topic: "1.2 Memory & Storage", q: "What is the difference between RAM and ROM?", a: "RAM is volatile (stores temporary data currently in use)[cite: 9]; ROM is non-volatile (stores boot instructions like BIOS)[cite: 9].", note: "RAM is read/write and loses data when powered off[cite: 9]. ROM is read-only and retains data permanently[cite: 9]. Virtual memory is used when RAM is full by paging data to secondary storage[cite: 9]." },
+      { comp: "c1", topic: "1.3 Networks", q: "What is the role of a DNS (Domain Name Server)?", a: "It translates human-readable URLs (e.g. google.com) into IP addresses.", note: "A DNS converts domain names into IP addresses so web browsers can load Internet resources[cite: 12]. Routers, switches, and NICs connect devices within networks[cite: 12]." },
+      { comp: "c1", topic: "1.4 Network Security", q: "What is Social Engineering in cyber security?", a: "Manipulating people into leaking confidential information (e.g., Phishing).", note: "Common attacks include Phishing[cite: 14], Malware[cite: 14], Brute-Force[cite: 14], Denial of Service (DoS)[cite: 14], and SQL Injection[cite: 14]. Prevention methods include Firewalls, Encryption, and Penetration Testing[cite: 14]." },
+      { comp: "c1", topic: "1.5 System Software", q: "What are the two main types of System Software?", a: "Operating Systems (OS) and Utility Software.", note: "Operating systems manage memory, multitasking, user interface, peripherals, and files[cite: 15]. Utility software provides housekeeping functions like defragmentation, encryption, and compression[cite: 15]." },
+      { comp: "c1", topic: "1.6 Ethical & Legal", q: "Which UK law protects against unauthorized access to computer systems?", a: "The Computer Misuse Act 1990.", note: "Key legislation includes: Data Protection Act 2018[cite: 16], Computer Misuse Act 1990[cite: 16], and Copyright Designs and Patents Act 1988[cite: 16]. Proprietary software keeps source code secret; Open Source allows public modification[cite: 16]." },
+      
+      // Component 2[cite: 7]
+      { comp: "c2", topic: "2.1 Algorithms", q: "What is Abstraction in computational thinking?", a: "Removing unnecessary details to focus on the essential features of a problem.", note: "Computational thinking relies on Abstraction (removing details)[cite: 17], Decomposition (breaking down problems)[cite: 17], and Algorithmic Thinking (logical step-by-step solutions)[cite: 17]." },
+      { comp: "c2", topic: "2.2 Programming Fundamentals", q: "What is the difference between Count-Controlled and Condition-Controlled loops?", a: "Count-controlled (FOR) loops run a fixed number of times[cite: 29]; Condition-controlled (WHILE/DO UNTIL) run until a condition is met[cite: 29].", note: "Constructs: Sequence, Selection (IF/CASE)[cite: 19, 30], Iteration (FOR/WHILE)[cite: 19, 29]. Comparison operators include ==, !=, <, <=, >, >=[cite: 19]. Modulo (MOD) gives remainder; DIV gives quotient[cite: 19]." },
+      { comp: "c2", topic: "2.3 Producing Robust Programs", q: "What are the four types of test data?", a: "Normal, Boundary, Invalid, and Erroneous data.", note: "Robust design uses Defensive Design (input validation, authentication)[cite: 21] and Maintainability (comments, indentation)[cite: 21]. Syntax errors break code rules; logic errors yield unintended output[cite: 21]." },
+      { comp: "c2", topic: "2.4 Boolean Logic", q: "What is the output of an AND gate when inputs are A=1 and B=0?", a: "0 (False). Both inputs must be 1 for output to be 1.", note: "Logic gates: AND (both 1)[cite: 22], OR (either 1)[cite: 22], NOT (inverts input)[cite: 22]. Truth tables represent all possible input/output combinations[cite: 22]." }
+    ];
+
+    // Quiz Questions Data Generator
+    const quizData = [
+      { comp: "c1", tag: "1.1 Systems Architecture", q: "Which register holds the memory address of the next instruction to be fetched?", options: ["Program Counter (PC)", "Memory Data Register (MDR)", "Accumulator (ACC)", "Control Unit (CU)"], answer: 0 },
+      { comp: "c1", tag: "1.2 Memory & Storage", q: "Which type of secondary storage uses flash memory and has no moving parts?", options: ["Magnetic Hard Disk Drive", "Solid State Drive (SSD)", "Optical CD-ROM", "Magnetic Tape"], answer: 1 },
+      { comp: "c1", tag: "1.3 Networks", q: "Which network protocol is used to securely fetch web pages?", options: ["HTTP", "FTP", "HTTPS", "SMTP"], answer: 2 },
+      { comp: "c2", tag: "2.1 Algorithms", q: "Which searching algorithm requires the list to be sorted before searching?", options: ["Linear Search", "Binary Search", "Bubble Sort", "Insertion Sort"], answer: 1 },
+      { comp: "c2", tag: "2.2 Programming", q: "What value does 17 MOD 5 return in OCR Exam Reference Language?", options: ["3", "2", "3.4", "0"], answer: 1 },
+      { comp: "c2", tag: "2.4 Boolean Logic", q: "What is the result of NOT (1 OR 0)?", options: ["1", "0", "True", "Undefined"], answer: 1 }
+    ];
+
+    // Navigation Logic
+    function switchTab(tabId) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    // Flashcard System
+    let filteredCards = [];
+    let currentCardIdx = 0;
+
+    function loadFlashcards() {
+      const filter = document.getElementById('flashcard-filter').value;
+      filteredCards = filter === 'all' ? contentData : contentData.filter(item => item.comp === filter);
+      currentCardIdx = 0;
+      showCard();
+    }
+
+    function showCard() {
+      const card = filteredCards[currentCardIdx];
+      document.getElementById('card').classList.remove('flipped');
+      document.getElementById('card-tag').innerText = card.topic;
+      document.getElementById('card-question').innerText = card.q;
+      document.getElementById('card-answer').innerText = card.a;
+      document.getElementById('card-counter').innerText = `${currentCardIdx + 1} / ${filteredCards.length}`;
+      document.getElementById('prev-btn').disabled = currentCardIdx === 0;
+      document.getElementById('next-btn').disabled = currentCardIdx === filteredCards.length - 1;
+    }
+
+    function flipCard() { document.getElementById('card').classList.toggle('flipped'); }
+    function prevCard() { if (currentCardIdx > 0) { currentCardIdx--; showCard(); } }
+    function nextCard() { if (currentCardIdx < filteredCards.length - 1) { currentCardIdx++; showCard(); } }
+
+    // Quiz System
+    let currentQuizIdx = 0;
+    let score = 0;
+    let filteredQuiz = [];
+
+    function resetQuiz() {
+      const filter = document.getElementById('quiz-filter').value;
+      filteredQuiz = filter === 'all' ? quizData : quizData.filter(q => q.comp === filter);
+      currentQuizIdx = 0;
+      score = 0;
+      document.getElementById('quiz-score').innerText = `Score: ${score}`;
+      showQuizQuestion();
+    }
+
+    function showQuizQuestion() {
+      if (currentQuizIdx >= filteredQuiz.length) {
+        document.getElementById('quiz-question').innerText = "Quiz Completed!";
+        document.getElementById('quiz-options').innerHTML = `<p>Your final score is ${score} out of ${filteredQuiz.length}.</p>`;
+        document.getElementById('quiz-next-btn').style.display = "none";
+        return;
+      }
+
+      const q = filteredQuiz[currentQuizIdx];
+      document.getElementById('quiz-tag').innerText = q.tag;
+      document.getElementById('quiz-question').innerText = q.q;
+      document.getElementById('quiz-next-btn').style.display = "none";
+
+      const optionsGrid = document.getElementById('quiz-options');
+      optionsGrid.innerHTML = '';
+
+      q.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerText = opt;
+        btn.onclick = () => selectOption(idx, q.answer, btn);
+        optionsGrid.appendChild(btn);
+      });
+    }
+
+    function selectOption(selectedIdx, correctIdx, btn) {
+      const allBtns = document.querySelectorAll('.option-btn');
+      allBtns.forEach(b => b.disabled = true);
+
+      if (selectedIdx === correctIdx) {
+        btn.classList.add('correct');
+        score++;
+      } else {
+        btn.classList.add('wrong');
+        allBtns[correctIdx].classList.add('correct');
+      }
+
+      document.getElementById('quiz-score').innerText = `Score: ${score}`;
+      document.getElementById('quiz-next-btn').style.display = "block";
+    }
+
+    function nextQuizQuestion() {
+      currentQuizIdx++;
+      showQuizQuestion();
+    }
+
+    // Notes System
+    function loadNotes() {
+      const filter = document.getElementById('notes-filter').value;
+      const filtered = filter === 'all' ? contentData : contentData.filter(item => item.comp === filter);
+      const container = document.getElementById('notes-container');
+      
+      container.innerHTML = filtered.map(item => `
+        <div class="note-item">
+          <h3>${item.topic}</h3>
+          <p>${item.note}</p>
+        </div>
+      `).join('');
+    }
+
+    // Initial Load
+    loadFlashcards();
+    resetQuiz();
+    loadNotes();
+  </script>
+</body>
+</html>
